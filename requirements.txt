@@ -1,3 +1,1 @@
-certifi==2020.12.5
-ibapi==9.81.1.post1
 PyMySQL==1.0.2

@@ -12,6 +12,10 @@
 git clone https://github.com/AlvinTheDeveloper/ib-market-data-collector.git
 cd ib-market-data-collector
 pip install -r requirements.txt
+cd lib/pythonclient/
+python3 setup.py sdist
+python3 setup.py bdist_wheel
+python3 -m pip install --user --upgrade dist/ibapi-9.76.1-py3-none-any.whl
 ```
 
 ### 2. Config

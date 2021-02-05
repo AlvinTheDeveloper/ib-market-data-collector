@@ -176,7 +176,7 @@ class IBHelperWrapper(wrapper.EWrapper):
 
             setattr(IBHelperWrapper, methName, self.countWrapReqId(methName, meth))
 
-            # print("TestClient.wrapMeth2reqIdIdx", self.wrapMeth2reqIdIdx)
+
 
 
 # this is here for documentation generation
@@ -235,13 +235,9 @@ class MarketDataCollector(IBHelperWrapper, IBHelperClient):
     # ! [nextvalidid]
     def nextValidId(self, orderId: int):
         super().nextValidId(orderId)
-        # self.createTasks()  # Update watchlist to let the computer know what it needs to focus on
         logging.debug("setting nextValidOrderId: %d", orderId)
         self.nextValidOrderId = orderId
         print("NextValidId:", orderId)
-        #     resultArr = conn.query('SELECT * FROM algo_trade.ib_request;', [])
-        # if len(resultArr):
-        #     pass
         # ! [nextvalidid]
 
         # we can start now
@@ -295,8 +291,6 @@ class MarketDataCollector(IBHelperWrapper, IBHelperClient):
             conn2.close()
             print("Error. Id:", reqId, "Code:", errorCode, "Msg:", errorString)
             self.finish()
-        # if errorCode==366:
-        #     self.cancelHistoricalData(reqId)
 
     # ! [error] self.reqId2nErr[reqId] += 1
 
@@ -669,20 +663,12 @@ class MarketDataCollector(IBHelperWrapper, IBHelperClient):
 
     def nextHistoricalDataOperation_req(self, reqId, errorCode=None):
         conn2 = db.DB()
-        # if errorCode is None:
         conn2.query("UPDATE algo_trade.ib_request SET status=%s WHERE action='collect_data' AND req_id=%s;",
                     [errorCode if errorCode is not None else -1, reqId])
-        # self.cancelHistoricalData(reqId)
         conn2.commit()
-        # else:
-        #     self.cancelHistoricalData(reqId)
 
         ib_requests = conn2.query(
             "SELECT * FROM algo_trade.ib_request WHERE action='collect_data' AND status=0 LIMIT 1;")
-        # if len(ib_requests) <= 0:
-        #     self.createTasks()
-        #     ib_requests = conn2.query(
-        #         "SELECT * FROM algo_trade.ib_request WHERE action='collect_data' AND status=0 LIMIT 1;")
         for req in ib_requests:
             watchlist = conn2.query("SELECT * FROM algo_trade.watchlist WHERE symbol=%s AND priority>-1 LIMIT 1;",
                                     [req['symbol']])
@@ -712,20 +698,9 @@ class MarketDataCollector(IBHelperWrapper, IBHelperClient):
             contract.secType = watchlist[0]['instr_type']
             contract.currency = "USD"
             contract.exchange = "SMART"
-            # Requesting historical data
-            # ! [reqHeadTimeStamp]
-            # self.reqHeadTimeStamp(4101, contract, "TRADES", 0, 1)
-            # ! [reqHeadTimeStamp]
 
             # ! [reqhistoricaldata]
             req_content = json.loads(req['req_content'])
-            # queryTime = (datetime.datetime.today()).strftime("%Y%m%d %H:%M:%S")
-            # queryTime = (datetime.datetime.today() - datetime.timedelta(days=180)).strftime("%Y%m%d %H:%M:%S")
-            # print(queryTime)
-
-            # self.reqHistoricalData(req['req_id'], ContractSamples.USStockAtSmart(), queryTime, "1 Y", "1 day",
-            #                        "MIDPOINT", 1, 1,
-            #                        False, [])
             conn2.query("UPDATE ib_request SET status=1 WHERE req_id=%s", [req['req_id']])
             conn2.commit()
             self.reqHistoricalData(req['req_id'], contract, req_content['queryTime'],
@@ -733,14 +708,6 @@ class MarketDataCollector(IBHelperWrapper, IBHelperClient):
                                    req_content['whatToShow'], req_content['useRTH'], req_content['formatDate'],
                                    True if req_content['keepUpToDate'] == "True" else False, [])
         conn2.close()
-            # self.reqHistoricalData(100000+ib_requests['req_id'], ContractSamples.USStockAtSmart(), queryTime, "1 D", "1 min", "MIDPOINT", 1, 1,
-            #                        False, [])
-        # self.reqHistoricalData(4102, ContractSamples.EurGbpFx(), queryTime,
-        #                        "1 M", "1 day", "MIDPOINT", 1, 1, False, [])
-        # self.reqHistoricalData(4103, ContractSamples.EuropeanStock(), queryTime,
-        #                        "10 D", "1 min", "TRADES", 1, 1, False, [])
-        # self.reqHistoricalData(4104, ContractSamples.EurGbpFx(), "",
-        #                        "1 M", "1 day", "MIDPOINT", 1, 1, True, [])
         # ! [reqhistoricaldata]
 
 
@@ -759,7 +726,6 @@ class MarketDataCollector(IBHelperWrapper, IBHelperClient):
     # ! [histogramData]
 
     def storeHistoricalData(self):
-    # def storeHistoricalData(self, date, open, high, low, close, volume, r):
         db_input=[]
 
         conn2 = db.DB()
@@ -767,11 +733,8 @@ class MarketDataCollector(IBHelperWrapper, IBHelperClient):
             req_content = json.loads(result[1]['req_content'])
             try:
                 timestamp = time.mktime(datetime.datetime.strptime(result[0].date, "%Y%m%d").timetuple())
-                # if req_content['barSizeSetting'] == "1 day":
-                # else:
             except ValueError:
                 timestamp = time.mktime(datetime.datetime.strptime(result[0].date, "%Y%m%d %H:%M:%S").timetuple())
-                # print('error')
 
             frequency = None
             if req_content["barSizeSetting"] == "1 day":
