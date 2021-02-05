@@ -1,0 +1,15 @@
+{
+    "db": {
+        "host": "127.0.0.1",
+        "port": 3306,
+        "database": "algo_trade",
+        "user": "your_name",
+        "password": "your_password"
+    },
+    "path": {
+        "watchlist_csv":[
+            "data/watchlist_sample.csv",
+            "data/favourite.csv"
+        ]
+    }
+}
