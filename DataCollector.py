@@ -1135,6 +1135,7 @@ class MarketDataCollector(IBHelperWrapper, IBHelperClient):
     # ! [completedordersend]
 
 
+# The program create tasks (everything needed for API call and response handling), and store those data to the database. Check createTasks() in the code.
 def createTasks():
     watchlist = conn.query(
         "SELECT * FROM watchlist WHERE priority>-1 AND instr_type='STK' ORDER BY priority DESC,last_update_time ASC;")
@@ -1227,7 +1228,7 @@ def runApp(args, ib_requests, idx):
         except Exception as e:
             print(e)
 
-
+# This function handle the arguments and start running 20 selected task in multithreading way.
 def main():
     SetupLogger()
     logging.debug("now is %s", datetime.datetime.now())
@@ -1297,8 +1298,10 @@ def main():
 
 
 if __name__ == "__main__":
-    conn.query("DELETE FROM algo_trade.ib_request WHERE 1=1;", [])  # reset the request table
-    conn.commit()
-    createTasks()
+    undoneRequest = conn.query("SELECT COUNT(*) as count FROM algo_trade.ib_request WHERE status=0;")
+    if undoneRequest[0]['count']<=0:
+        conn.query("DELETE FROM algo_trade.ib_request WHERE 1=1;", [])  # reset the request table
+        conn.commit()
+        createTasks()
 
     main()
